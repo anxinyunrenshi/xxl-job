@@ -1,5 +1,8 @@
 package com.xxl.job.admin.core.thread;
 
+import com.xxl.job.admin.XxlJobAdminApplication;
+import com.xxl.job.admin.core.alarm.dingtalk.DingTalkComponent;
+import com.xxl.job.admin.core.alarm.dingtalk.XxlJobLogConvertor;
 import com.xxl.job.admin.core.conf.XxlJobAdminConfig;
 import com.xxl.job.admin.core.model.XxlJobGroup;
 import com.xxl.job.admin.core.model.XxlJobInfo;
@@ -191,6 +194,14 @@ public class JobFailMonitorHelper {
 
 			}
 		}
+
+		// send dingTalk alarm
+		if(info != null){
+			XxlJobGroup group = XxlJobAdminConfig.getAdminConfig().getXxlJobGroupDao().load(Integer.valueOf(info.getJobGroup()));
+			DingTalkComponent dingTalkComponent = XxlJobAdminApplication.context.getBean(DingTalkComponent.class);
+			dingTalkComponent.sendAlarm(XxlJobLogConvertor.convert(group, info, jobLog));
+		}
+
 
 		// do something, custom alarm strategy, such as sms
 

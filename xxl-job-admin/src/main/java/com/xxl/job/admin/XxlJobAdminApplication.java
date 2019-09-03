@@ -2,6 +2,7 @@ package com.xxl.job.admin;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.ConfigurableApplicationContext;
 
 /**
  * @author xuxueli 2018-10-28 00:38:13
@@ -9,8 +10,10 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 @SpringBootApplication
 public class XxlJobAdminApplication {
 
-	public static void main(String[] args) {
-        SpringApplication.run(XxlJobAdminApplication.class, args);
-	}
+    public static ConfigurableApplicationContext context;
+
+    public static void main(String[] args) {
+        context = SpringApplication.run(XxlJobAdminApplication.class, args);
+    }
 
 }
