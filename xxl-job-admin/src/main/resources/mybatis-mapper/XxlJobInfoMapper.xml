@@ -224,4 +224,11 @@
 		WHERE id = #{id}
 	</update>
 
+	<select id="findByJobGroupAndExecutorHandler" resultMap="XxlJobInfo">
+		SELECT <include refid="Base_Column_List" />
+		FROM xxl_job_info AS t
+		WHERE t.job_group = #{jobGroup}
+		AND t.executor_handler = #{executorHandler}
+	</select>
+
 </mapper>

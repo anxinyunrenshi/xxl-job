@@ -1,6 +1,7 @@
 package com.xxl.job.admin.dao;
 
 import com.xxl.job.admin.core.model.XxlJobInfo;
+import javax.annotation.security.PermitAll;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
@@ -44,6 +45,9 @@ public interface XxlJobInfoDao {
 	public List<XxlJobInfo> scheduleJobQuery(@Param("maxNextTime") long maxNextTime);
 
 	public int scheduleUpdate(XxlJobInfo xxlJobInfo);
+
+
+	public XxlJobInfo findByJobGroupAndExecutorHandler(@Param("jobGroup") int jobGroup, @Param("executorHandler") String executorHandler);
 
 
 }
