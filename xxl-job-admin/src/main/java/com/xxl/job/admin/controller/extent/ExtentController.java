@@ -133,11 +133,14 @@ public class ExtentController {
 
         ReturnT<String> result = xxlJobService.addOrIgnore(xxlJobInfo);
 
-        // 自动开启
-        if(autoStart){
-            LOGGER.info("jobInfo jobGroupId[{}] ExecutorHandler[{}] auto start job.", xxlJobInfo.getJobGroup(), xxlJobInfo.getExecutorHandler());
-            xxlJobService.start(Integer.valueOf(result.getContent()));
+        if(ReturnT.SUCCESS_CODE == result.getCode()){
+            // 自动开启
+            if(autoStart){
+                LOGGER.info("jobInfo jobGroupId[{}] ExecutorHandler[{}] auto start job.", xxlJobInfo.getJobGroup(), xxlJobInfo.getExecutorHandler());
+                xxlJobService.start(Integer.valueOf(result.getContent()));
+            }
         }
+
         return result;
 
     }
