@@ -3,6 +3,7 @@ package com.xxl.job.admin.controller.extent;
 import com.xxl.job.admin.controller.annotation.PermissionLimit;
 import com.xxl.job.admin.core.model.XxlJobGroup;
 import com.xxl.job.admin.core.model.XxlJobInfo;
+import com.xxl.job.admin.core.model.dto.req.XxlJobReq;
 import com.xxl.job.admin.core.util.I18nUtil;
 import com.xxl.job.admin.dao.XxlJobGroupDao;
 import com.xxl.job.admin.dao.XxlJobInfoDao;
@@ -12,6 +13,7 @@ import com.xxl.job.core.glue.GlueTypeEnum;
 import javax.annotation.Resource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -104,7 +106,12 @@ public class ExtentController {
     @RequestMapping(value = "/job_info/register", method = RequestMethod.POST)
     @PermissionLimit(limit = false)
     @ResponseBody
-    public ReturnT<String> registerJobInfo(XxlJobInfo xxlJobInfo) {
+    public ReturnT<String> registerJobInfo(XxlJobReq xxlJobReq) {
+
+        XxlJobInfo xxlJobInfo = new XxlJobInfo();
+        BeanUtils.copyProperties(xxlJobReq, xxlJobInfo);
+        boolean autoStart = xxlJobReq.isAutoStart();
+
         if (GlueTypeEnum.match(xxlJobInfo.getGlueType()) == null) {
             return new ReturnT<String>(ReturnT.FAIL_CODE, (I18nUtil.getString("jobinfo_field_gluetype") + I18nUtil.getString("system_unvalid")));
         }
@@ -112,18 +119,25 @@ public class ExtentController {
                 && (xxlJobInfo.getExecutorHandler() == null || xxlJobInfo.getExecutorHandler().trim().length() == 0)) {
             return new ReturnT<String>(ReturnT.FAIL_CODE, (I18nUtil.getString("system_please_input") + "JobHandler"));
         }
+
         XxlJobInfo jobInfo = xxlJobInfoDao.findByJobGroupAndExecutorHandler(xxlJobInfo.getJobGroup(), xxlJobInfo.getExecutorHandler());
         if (jobInfo != null) {
             LOGGER.info("jobInfo jobGroupId[{}] ExecutorHandler[{}] is exist. no repeat registration is required.", xxlJobInfo.getJobGroup(), xxlJobInfo.getExecutorHandler());
             // 自动开启
-            xxlJobService.start(jobInfo.getId());
+            if(autoStart){
+                LOGGER.info("jobInfo jobGroupId[{}] ExecutorHandler[{}] auto start job.", xxlJobInfo.getJobGroup(), xxlJobInfo.getExecutorHandler());
+                xxlJobService.start(jobInfo.getId());
+            }
             return new ReturnT<String>(String.valueOf(jobInfo.getId()));
         }
 
-        ReturnT<String> result = xxlJobService.add(xxlJobInfo);
+        ReturnT<String> result = xxlJobService.addOrIgnore(xxlJobInfo);
 
         // 自动开启
-        xxlJobService.start(Integer.valueOf(result.getContent()));
+        if(autoStart){
+            LOGGER.info("jobInfo jobGroupId[{}] ExecutorHandler[{}] auto start job.", xxlJobInfo.getJobGroup(), xxlJobInfo.getExecutorHandler());
+            xxlJobService.start(Integer.valueOf(result.getContent()));
+        }
         return result;
 
     }

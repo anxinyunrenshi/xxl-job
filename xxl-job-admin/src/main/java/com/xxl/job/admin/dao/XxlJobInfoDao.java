@@ -49,5 +49,6 @@ public interface XxlJobInfoDao {
 
 	public XxlJobInfo findByJobGroupAndExecutorHandler(@Param("jobGroup") int jobGroup, @Param("executorHandler") String executorHandler);
 
+	public int saveOrIgnore(XxlJobInfo info);
 
 }
