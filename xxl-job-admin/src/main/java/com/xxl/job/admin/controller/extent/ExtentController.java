@@ -95,9 +95,16 @@ public class ExtentController {
             return new ReturnT<XxlJobGroup>(jobGroup);
         }
 
-        int ret = xxlJobGroupDao.save(xxlJobGroup);
+        int ret = xxlJobGroupDao.saveOrIgnore(xxlJobGroup);
         if (ret > 0) {
             return new ReturnT<XxlJobGroup>(xxlJobGroup);
+        }else{
+            jobGroup = xxlJobGroupDao.findByAppNameAndTitle(xxlJobGroup.getAppName(), xxlJobGroup.getTitle());
+            if (jobGroup != null) {
+                LOGGER.info("jobGroup appName[{}] title[{}] is exist. there is competition for resources..", xxlJobGroup.getAppName(), xxlJobGroup.getTitle());
+                return new ReturnT<XxlJobGroup>(jobGroup);
+            }
+
         }
         return new ReturnT<XxlJobGroup>(500, "");
     }
