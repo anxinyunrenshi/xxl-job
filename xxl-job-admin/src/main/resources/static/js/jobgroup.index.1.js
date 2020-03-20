@@ -17,7 +17,7 @@ $(function() {
 				data : {"id":id},
 				dataType : "json",
 				success : function(data){
-					if (data.code == 200) {
+					if (data.code === 200) {
 						layer.open({
 							title: I18n.system_tips ,
                             btn: [ I18n.system_ok ],
@@ -44,7 +44,7 @@ $(function() {
 	// jquery.validate “low letters start, limit contants、 letters、numbers and line-through.”
 	jQuery.validator.addMethod("myValid01", function(value, element) {
 		var length = value.length;
-		var valid = /^[a-z][a-zA-Z0-9-]*$/;
+		var valid = /^(\[[a-z]+]|[a-z])[a-zA-Z0-9-\[\]]*$/;
 		return this.optional(element) || valid.test(value);
 	}, I18n.jobgroup_field_appName_limit );
 
@@ -63,7 +63,7 @@ $(function() {
 			},
 			title : {
 				required : true,
-				rangelength:[4, 12]
+				rangelength:[4, 64]
 			},
 			order : {
 				required : true,
@@ -170,7 +170,7 @@ $(function() {
 			},
 			title : {
 				required : true,
-				rangelength:[4, 12]
+				rangelength:[4, 64]
 			},
 			order : {
 				required : true,
@@ -206,7 +206,7 @@ $(function() {
 		},
 		submitHandler : function(form) {
 			$.post(base_url + "/jobgroup/update",  $("#updateModal .form").serialize(), function(data, status) {
-				if (data.code == "200") {
+				if (data.code === "200") {
 					$('#addModal').modal('hide');
 
 					layer.open({

@@ -1,6 +1,8 @@
-package com.xxl.job.admin.core.conf;
+package com.xxl.job.admin.core.scheduler;
 
+import com.xxl.job.admin.core.conf.XxlJobAdminConfig;
 import com.xxl.job.admin.core.thread.JobFailMonitorHelper;
+import com.xxl.job.admin.core.thread.JobLogReportHelper;
 import com.xxl.job.admin.core.thread.JobRegistryMonitorHelper;
 import com.xxl.job.admin.core.thread.JobScheduleHelper;
 import com.xxl.job.admin.core.thread.JobTriggerPoolHelper;
@@ -33,14 +35,11 @@ import java.util.concurrent.ConcurrentMap;
 /**
  * @author xuxueli 2018-10-28 00:18:17
  */
-@Component
-@DependsOn("xxlJobAdminConfig")
-public class XxlJobScheduler implements InitializingBean, DisposableBean {
+public class XxlJobScheduler {
     private static final Logger logger = LoggerFactory.getLogger(XxlJobScheduler.class);
 
 
-    @Override
-    public void afterPropertiesSet() throws Exception {
+    public void init() throws Exception {
         // init i18n
         initI18n();
 
@@ -53,17 +52,25 @@ public class XxlJobScheduler implements InitializingBean, DisposableBean {
         // admin-server
         initRpcProvider();
 
+        // admin trigger pool start
+        JobTriggerPoolHelper.toStart();
+
+        // admin log report start
+        JobLogReportHelper.getInstance().start();
+
         // start-schedule
         JobScheduleHelper.getInstance().start();
 
         logger.info(">>>>>>>>> init xxl-job admin success.");
     }
 
-    @Override
     public void destroy() throws Exception {
 
         // stop-schedule
         JobScheduleHelper.getInstance().toStop();
+
+        // admin log report stop
+        JobLogReportHelper.getInstance().toStop();
 
         // admin trigger pool stop
         JobTriggerPoolHelper.toStop();

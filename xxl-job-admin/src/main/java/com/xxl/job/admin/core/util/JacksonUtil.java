@@ -92,29 +92,4 @@ public class JacksonUtil {
 		return null;
 	}
 
-    /*public static <T> T readValueRefer(String jsonStr, Class<T> clazz) {
-    	try {
-			return getInstance().readValue(jsonStr, new TypeReference<T>() { });
-		} catch (JsonParseException e) {
-			logger.error(e.getMessage(), e);
-		} catch (JsonMappingException e) {
-			logger.error(e.getMessage(), e);
-		} catch (IOException e) {
-			logger.error(e.getMessage(), e);
-		}
-    	return null;
-    }*/
-
-    public static void main(String[] args) {
-		try {
-			Map<String, String> map = new HashMap<String, String>();
-			map.put("aaa", "111");
-			map.put("bbb", "222");
-			String json = writeValueAsString(map);
-			System.out.println(json);
-			System.out.println(readValue(json, Map.class));
-		} catch (Exception e) {
-			logger.error(e.getMessage(), e);
-		}
-	}
 }

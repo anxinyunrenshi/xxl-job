@@ -12,6 +12,7 @@ import com.xxl.job.admin.core.util.I18nUtil;
 import com.xxl.job.core.biz.model.ReturnT;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeansException;
 import org.springframework.mail.javamail.MimeMessageHelper;
 
 import javax.mail.internet.MimeMessage;
@@ -63,7 +64,7 @@ public class JobFailMonitorHelper {
 
 								// 1、fail retry monitor
 								if (log.getExecutorFailRetryCount() > 0) {
-									JobTriggerPoolHelper.trigger(log.getJobId(), TriggerTypeEnum.RETRY, (log.getExecutorFailRetryCount()-1), log.getExecutorShardingParam(), null);
+									JobTriggerPoolHelper.trigger(log.getJobId(), TriggerTypeEnum.RETRY, (log.getExecutorFailRetryCount()-1), log.getExecutorShardingParam(), log.getExecutorParam());
 									String retryMsg = "<br><br><span style=\"color:#F39C12;\" > >>>>>>>>>>>"+ I18nUtil.getString("jobconf_trigger_type_retry") +"<<<<<<<<<<< </span><br>";
 									log.setTriggerMsg(log.getTriggerMsg() + retryMsg);
 									XxlJobAdminConfig.getAdminConfig().getXxlJobLogDao().updateTriggerInfo(log);
@@ -71,27 +72,28 @@ public class JobFailMonitorHelper {
 
 								// 2、fail alarm monitor
 								int newAlarmStatus = 0;		// 告警状态：0-默认、-1=锁定状态、1-无需告警、2-告警成功、3-告警失败
-								if (info!=null && info.getAlarmEmail()!=null && info.getAlarmEmail().trim().length()>0) {
-									boolean alarmResult = true;
-									try {
-										alarmResult = failAlarm(info, log);
-									} catch (Exception e) {
-										alarmResult = false;
-										logger.error(e.getMessage(), e);
-									}
-									newAlarmStatus = alarmResult?2:3;
-								} else {
-									newAlarmStatus = 1;
-								}
+                                try {
+                                    newAlarmStatus = failAlarm(info, log);
+                                } catch (Exception e) {
+                                    newAlarmStatus = 3;
+                                    logger.error(e.getMessage(), e);
+                                }
 
 								XxlJobAdminConfig.getAdminConfig().getXxlJobLogDao().updateAlarmStatus(failLogId, -1, newAlarmStatus);
 							}
 						}
 
-						TimeUnit.SECONDS.sleep(10);
 					} catch (Exception e) {
 						if (!toStop) {
 							logger.error(">>>>>>>>>>> xxl-job, job fail monitor thread error:{}", e);
+						}
+					}
+
+					try {
+						TimeUnit.SECONDS.sleep(10);
+					} catch (Exception e) {
+						if (!toStop) {
+							logger.error(e.getMessage(), e);
 						}
 					}
 				}
@@ -144,15 +146,16 @@ public class JobFailMonitorHelper {
 
 	/**
 	 * fail alarm
-	 *
+	 * 告警状态：0-默认、-1=锁定状态、1-无需告警、2-告警成功、3-告警失败
 	 * @param jobLog
 	 */
-	private boolean failAlarm(XxlJobInfo info, XxlJobLog jobLog){
-		boolean alarmResult = true;
+	private int failAlarm(XxlJobInfo info, XxlJobLog jobLog){
+		int alarmResult = 1;
 
 		// send monitor email
 		if (info!=null && info.getAlarmEmail()!=null && info.getAlarmEmail().trim().length()>0) {
 
+		    alarmResult = 2;
 			// alarmContent
 			String alarmContent = "Alarm Job LogId=" + jobLog.getId();
 			if (jobLog.getTriggerCode() != ReturnT.SUCCESS_CODE) {
@@ -189,7 +192,7 @@ public class JobFailMonitorHelper {
 				} catch (Exception e) {
 					logger.error(">>>>>>>>>>> xxl-job, job fail alarm email send error, JobLogId:{}", jobLog.getId(), e);
 
-					alarmResult = false;
+					alarmResult = 3;
 				}
 
 			}
@@ -197,10 +200,16 @@ public class JobFailMonitorHelper {
 
 		// send dingTalk alarm
 		if(info != null){
-			XxlJobGroup group = XxlJobAdminConfig.getAdminConfig().getXxlJobGroupDao().load(Integer.valueOf(info.getJobGroup()));
-			DingTalkComponent dingTalkComponent = XxlJobAdminApplication.context.getBean(DingTalkComponent.class);
-			dingTalkComponent.sendAlarm(XxlJobLogConvertor.convert(group, info, jobLog));
-		}
+            try {
+                alarmResult = 2;
+                XxlJobGroup group = XxlJobAdminConfig.getAdminConfig().getXxlJobGroupDao().load(Integer.valueOf(info.getJobGroup()));
+                DingTalkComponent dingTalkComponent = XxlJobAdminApplication.context.getBean(DingTalkComponent.class);
+                dingTalkComponent.sendAlarm(XxlJobLogConvertor.convert(group, info, jobLog));
+            } catch (Exception e) {
+                alarmResult = 3;
+                logger.error("钉钉发送异常: {}", e.getMessage(), e);
+            }
+        }
 
 
 		// do something, custom alarm strategy, such as sms
@@ -208,5 +217,6 @@ public class JobFailMonitorHelper {
 
 		return alarmResult;
 	}
+
 
 }
