@@ -153,9 +153,10 @@ public class JobFailMonitorHelper {
 		int alarmResult = 1;
 
 		// send monitor email
+		int emailResult = 1;
 		if (info!=null && info.getAlarmEmail()!=null && info.getAlarmEmail().trim().length()>0) {
 
-		    alarmResult = 2;
+			emailResult = 2;
 			// alarmContent
 			String alarmContent = "Alarm Job LogId=" + jobLog.getId();
 			if (jobLog.getTriggerCode() != ReturnT.SUCCESS_CODE) {
@@ -192,24 +193,27 @@ public class JobFailMonitorHelper {
 				} catch (Exception e) {
 					logger.error(">>>>>>>>>>> xxl-job, job fail alarm email send error, JobLogId:{}", jobLog.getId(), e);
 
-					alarmResult = 3;
+					emailResult = 3;
 				}
 
 			}
 		}
+		alarmResult = alarmResult(alarmResult, emailResult);
 
 		// send dingTalk alarm
+		int dingTalkResult = 1;
 		if(info != null){
             try {
-                alarmResult = 2;
+				dingTalkResult = 2;
                 XxlJobGroup group = XxlJobAdminConfig.getAdminConfig().getXxlJobGroupDao().load(Integer.valueOf(info.getJobGroup()));
                 DingTalkComponent dingTalkComponent = XxlJobAdminApplication.context.getBean(DingTalkComponent.class);
                 dingTalkComponent.sendAlarm(XxlJobLogConvertor.convert(group, info, jobLog));
             } catch (Exception e) {
-                alarmResult = 3;
+				dingTalkResult = 3;
                 logger.error("钉钉发送异常: {}", e.getMessage(), e);
             }
         }
+		alarmResult = alarmResult(alarmResult, dingTalkResult);
 
 
 		// do something, custom alarm strategy, such as sms
@@ -217,6 +221,20 @@ public class JobFailMonitorHelper {
 
 		return alarmResult;
 	}
+
+	private int alarmResult(int result,int channelResult){
+	    // 只要有一个通道发送成功就是成功
+	    if(channelResult == 2 || result == 2){
+	        return 2;
+        }
+        // 失败
+        if(channelResult == 3){
+	        return 3;
+        }
+        return result;
+    }
+
+
 
 
 }
