@@ -131,10 +131,10 @@ public class ExtentController {
         if (jobInfo != null) {
             LOGGER.info("jobInfo jobGroupId[{}] ExecutorHandler[{}] is exist. no repeat registration is required.", xxlJobInfo.getJobGroup(), xxlJobInfo.getExecutorHandler());
             // 自动开启
-            if(autoStart){
-                LOGGER.info("jobInfo jobGroupId[{}] ExecutorHandler[{}] auto start job.", xxlJobInfo.getJobGroup(), xxlJobInfo.getExecutorHandler());
-                xxlJobService.start(jobInfo.getId());
-            }
+//            if(autoStart){
+//                LOGGER.info("jobInfo jobGroupId[{}] ExecutorHandler[{}] auto start job.", xxlJobInfo.getJobGroup(), xxlJobInfo.getExecutorHandler());
+//                xxlJobService.start(jobInfo.getId());
+//            }
             return new ReturnT<String>(String.valueOf(jobInfo.getId()));
         }
 
