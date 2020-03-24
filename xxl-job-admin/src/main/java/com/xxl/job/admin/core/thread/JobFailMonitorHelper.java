@@ -1,5 +1,9 @@
 package com.xxl.job.admin.core.thread;
 
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import com.huixian.common2.util.EnvironmentUtil;
 import com.xxl.job.admin.XxlJobAdminApplication;
 import com.xxl.job.admin.core.alarm.dingtalk.DingTalkComponent;
@@ -11,6 +15,9 @@ import com.xxl.job.admin.core.model.XxlJobLog;
 import com.xxl.job.admin.core.trigger.TriggerTypeEnum;
 import com.xxl.job.admin.core.util.I18nUtil;
 import com.xxl.job.core.biz.model.ReturnT;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.atomic.AtomicLong;
+import javax.mail.Message;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
@@ -152,8 +159,16 @@ public class JobFailMonitorHelper {
 	 */
 	private int failAlarm(XxlJobInfo info, XxlJobLog jobLog){
 		int alarmResult = 1;
+		// 避免过多告警
+        try {
+            if(info != null &&cache.get(Integer.valueOf(info.getId())).incrementAndGet() > 1){
+                return alarmResult;
+            }
+        } catch (ExecutionException e) {
+            // no doing anything
+        }
 
-		// send monitor email
+        // send monitor email
 		int emailResult = 1;
 		if (info!=null && info.getAlarmEmail()!=null && info.getAlarmEmail().trim().length()>0) {
 
@@ -233,9 +248,20 @@ public class JobFailMonitorHelper {
 	        return 3;
         }
         return result;
+
     }
 
 
-
+    /**
+     * 如果在时间窗口 N 内发生了 X 次异常信息，相应的我就需要作出反馈（报警、记录日志等）
+     */
+    private static final LoadingCache<Integer, AtomicLong> cache = CacheBuilder.newBuilder()
+            .expireAfterWrite(3, TimeUnit.MINUTES)
+            .build(new CacheLoader<Integer, AtomicLong>(){
+                @Override
+                public AtomicLong load(Integer key) throws Exception {
+                    return new AtomicLong(0);
+                }
+            });
 
 }
