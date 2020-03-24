@@ -69,7 +69,6 @@ public class JobLogReportHelper {
                             xxlJobLogReport.setFailCount(0);
 
                             Map<String, Object> triggerCountMap = XxlJobAdminConfig.getAdminConfig().getXxlJobLogDao().findLogReport(todayFrom, todayTo);
-                            logger.info("统计日志调用报表: 时间[{}]-[{}], 结果:[{}]", todayFrom, todayTo, triggerCountMap);
                             if (triggerCountMap!=null && triggerCountMap.size()>0) {
                                 int triggerDayCount = triggerCountMap.containsKey("triggerDayCount")?Integer.valueOf(String.valueOf(triggerCountMap.get("triggerDayCount"))):0;
                                 int triggerDayCountRunning = triggerCountMap.containsKey("triggerDayCountRunning")?Integer.valueOf(String.valueOf(triggerCountMap.get("triggerDayCountRunning"))):0;
@@ -97,7 +96,6 @@ public class JobLogReportHelper {
                     // 2、log-clean: switch open & once each day
                     if (XxlJobAdminConfig.getAdminConfig().getLogretentiondays() > 0
                             && System.currentTimeMillis() - lastCleanLogTime > 24 * 60 * 60 * 1000) {
-                        logger.info(">>>>>>>>>>>>>> log-clean: {}", lastCleanLogTime);
 
                         // expire-time
                         Calendar expiredDay = Calendar.getInstance();
