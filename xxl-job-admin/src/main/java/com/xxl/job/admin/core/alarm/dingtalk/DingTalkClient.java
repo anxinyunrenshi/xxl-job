@@ -38,7 +38,7 @@ public class DingTalkClient implements InitializingBean {
 
         //同步发送请求
         Call call = okHttpClient.newCall(request);
-        Response response;
+        Response response = null;
         try {
             response = call.execute();
             if (!response.isSuccessful()) {
@@ -46,6 +46,10 @@ public class DingTalkClient implements InitializingBean {
             }
         } catch (Exception e) {
             log.error("钉钉发送消息失败{}", e);
+        }finally {
+            if(response != null){
+                response.close();
+            }
         }
     }
 

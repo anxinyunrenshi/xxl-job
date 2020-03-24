@@ -1,5 +1,6 @@
 package com.xxl.job.admin.core.thread;
 
+import com.huixian.common2.util.EnvironmentUtil;
 import com.xxl.job.admin.XxlJobAdminApplication;
 import com.xxl.job.admin.core.alarm.dingtalk.DingTalkComponent;
 import com.xxl.job.admin.core.alarm.dingtalk.XxlJobLogConvertor;
@@ -204,10 +205,10 @@ public class JobFailMonitorHelper {
 		int dingTalkResult = 1;
 		if(info != null){
             try {
-				dingTalkResult = 2;
-                XxlJobGroup group = XxlJobAdminConfig.getAdminConfig().getXxlJobGroupDao().load(Integer.valueOf(info.getJobGroup()));
+                dingTalkResult = 2;
+                XxlJobGroup group = XxlJobAdminConfig.getAdminConfig().getXxlJobGroupDao().load(info.getJobGroup());
                 DingTalkComponent dingTalkComponent = XxlJobAdminApplication.context.getBean(DingTalkComponent.class);
-                dingTalkComponent.sendAlarm(XxlJobLogConvertor.convert(group, info, jobLog));
+                dingTalkComponent.sendAlarmNotAll(XxlJobLogConvertor.convert(group, info, jobLog));
             } catch (Exception e) {
 				dingTalkResult = 3;
                 logger.error("钉钉发送异常: {}", e.getMessage(), e);

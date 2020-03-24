@@ -18,12 +18,13 @@ public class XxlJobLogConvertor {
         return new StringBuilder()
                 .append("监控告警明细：").append(LF)
                 .append("执行器：").append(jobGroup.getTitle()).append(LF)
-                .append("任务ID：").append(jobLog.getJobId()).append(LF)
+//                .append("任务ID：").append(jobLog.getJobId()).append(LF)
                 .append("任务描述：").append(jobInfo.getJobDesc()).append(LF)
-                .append("告警类型：调度失败").append(LF)
-                .append("告警内容：").append(LF)
-                .append("Alarm Job LogId=").append(jobLog.getId()).append(LF)
-                .append("TriggerMsg=").append(jobLog.getTriggerMsg().replaceAll("<br>", LF).replace("<span style=\"color:#00c0ef;\" > ", "").replace(" </span>", ""))
+//                .append("告警类型：调度失败").append(LF)
+//                .append("告警内容：").append(LF)
+//                .append("Alarm Job LogId=").append(jobLog.getId()).append(LF)
+//                .append("TriggerMsg=")
+                .append(jobLog.getTriggerMsg().replaceAll("<br>", LF).replace("<span style=\"color:#00c0ef;\" > ", "").replace(" </span>", ""))
                 .toString();
     }
 
