@@ -1,10 +1,8 @@
 package com.xxl.job.admin.core.thread;
 
-import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
-import com.huixian.common2.util.EnvironmentUtil;
 import com.xxl.job.admin.XxlJobAdminApplication;
 import com.xxl.job.admin.core.alarm.dingtalk.DingTalkComponent;
 import com.xxl.job.admin.core.alarm.dingtalk.XxlJobLogConvertor;
@@ -15,21 +13,19 @@ import com.xxl.job.admin.core.model.XxlJobLog;
 import com.xxl.job.admin.core.trigger.TriggerTypeEnum;
 import com.xxl.job.admin.core.util.I18nUtil;
 import com.xxl.job.core.biz.model.ReturnT;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.atomic.AtomicLong;
-import javax.mail.Message;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.BeansException;
-import org.springframework.mail.javamail.MimeMessageHelper;
-
-import javax.mail.internet.MimeMessage;
 import java.text.MessageFormat;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
+import javax.mail.internet.MimeMessage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.mail.javamail.MimeMessageHelper;
 
 /**
  * job monitor instance
@@ -160,13 +156,9 @@ public class JobFailMonitorHelper {
 	private int failAlarm(XxlJobInfo info, XxlJobLog jobLog){
 		int alarmResult = 1;
 		// 避免过多告警
-        try {
-            if(info != null &&cache.get(Integer.valueOf(info.getId())).incrementAndGet() > 1){
-                return alarmResult;
-            }
-        } catch (ExecutionException e) {
-            // no doing anything
-        }
+		if(info != null && !isAlarm(info.getId())){
+			return alarmResult;
+		}
 
         // send monitor email
 		int emailResult = 1;
@@ -255,13 +247,77 @@ public class JobFailMonitorHelper {
     /**
      * 如果在时间窗口 N 内发生了 X 次异常信息，相应的我就需要作出反馈（报警、记录日志等）
      */
-    private static final LoadingCache<Integer, AtomicLong> cache = CacheBuilder.newBuilder()
-            .expireAfterWrite(3, TimeUnit.MINUTES)
-            .build(new CacheLoader<Integer, AtomicLong>(){
+    private final LoadingCache<Integer, AlarmCount> cache = CacheBuilder.newBuilder()
+            .expireAfterWrite(36, TimeUnit.HOURS)
+            .build(new CacheLoader<Integer, AlarmCount>(){
                 @Override
-                public AtomicLong load(Integer key) throws Exception {
-                    return new AtomicLong(0);
+                public AlarmCount load(Integer key) throws Exception {
+                    return new AlarmCount(key);
                 }
             });
+    private static final long TRIGGER_TNTERVAL = 3 * 60 * 1000L;
+
+    public boolean isAlarm(Integer key){
+		try {
+			AlarmCount alarmCount = this.cache.get(key);
+			// 触发间隔时间大于三分钟
+			if(alarmCount.incrementAndGet() > 1 && (System.currentTimeMillis() - alarmCount.getCreateTime().getTime()) > TRIGGER_TNTERVAL){
+				// 删除缓存 进入一下次
+				logger.info("触发告警: {}", alarmCount);
+				this.cache.invalidate(key);
+				return true;
+			}
+		} catch (ExecutionException e) {
+			// no doing anything
+		}
+		return false;
+	}
+
+    public static class AlarmCount {
+    	private Integer jobId;
+    	// 计数器
+    	private AtomicLong count;
+    	// 上一次触发时间
+    	private Date lastTriggerTime;
+    	// 计数开始时间
+    	private Date createTime;
+
+		public AlarmCount(Integer jobId) {
+			this.jobId = jobId;
+			this.count = new AtomicLong(0);
+			this.createTime = new Date();
+		}
+
+    	public long incrementAndGet(){
+    		this.lastTriggerTime = new Date();
+			return this.count.incrementAndGet();
+		}
+
+		public Integer getJobId() {
+			return jobId;
+		}
+
+		public AtomicLong getCount() {
+			return count;
+		}
+
+		public Date getLastTriggerTime() {
+			return lastTriggerTime;
+		}
+
+		public Date getCreateTime() {
+			return createTime;
+		}
+
+		@Override
+		public String toString() {
+			return "AlarmCount{" +
+					"jobId=" + jobId +
+					", count=" + count +
+					", lastTriggerTime=" + lastTriggerTime +
+					", createTime=" + createTime +
+					'}';
+		}
+	}
 
 }
