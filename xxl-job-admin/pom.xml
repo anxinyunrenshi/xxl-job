@@ -47,7 +47,13 @@
 			<artifactId>spring-boot-starter-mail</artifactId>
 		</dependency>
 
-		<!-- mybatis-starter：mybatis + mybatis-spring + tomcat-jdbc（default） -->
+    <!-- starter-actuator -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-actuator</artifactId>
+    </dependency>
+
+		<!-- mybatis-starter：mybatis + mybatis-spring + hikari（default） -->
 		<dependency>
 			<groupId>org.mybatis.spring.boot</groupId>
 			<artifactId>mybatis-spring-boot-starter</artifactId>
@@ -91,6 +97,20 @@
 			<groupId>com.huixian</groupId>
 			<artifactId>huixian-common2</artifactId>
 			<version>1.1.2</version>
+		</dependency>
+
+		<!-- prometheus -->
+		<dependency>
+			<groupId>com.huixian</groupId>
+			<artifactId>huixian-prometheus</artifactId>
+			<version>1.0.1</version>
+		</dependency>
+
+		<!-- apollo -->
+		<dependency>
+			<groupId>com.huixian</groupId>
+			<artifactId>huixian-apollo</artifactId>
+			<version>1.1.1</version>
 		</dependency>
 
 	</dependencies>

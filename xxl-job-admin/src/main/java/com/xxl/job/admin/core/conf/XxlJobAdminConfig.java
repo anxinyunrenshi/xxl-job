@@ -1,5 +1,6 @@
 package com.xxl.job.admin.core.conf;
 
+import com.xxl.job.admin.core.alarm.JobAlarmer;
 import com.xxl.job.admin.core.scheduler.XxlJobScheduler;
 import com.xxl.job.admin.dao.XxlJobGroupDao;
 import com.xxl.job.admin.dao.XxlJobInfoDao;
@@ -84,6 +85,8 @@ public class XxlJobAdminConfig implements InitializingBean, DisposableBean {
     @Resource
     private JavaMailSender mailSender;
     @Resource
+    private JobAlarmer jobAlarmer;
+    @Resource
     private DataSource dataSource;
 
 
@@ -147,6 +150,10 @@ public class XxlJobAdminConfig implements InitializingBean, DisposableBean {
 
     public JavaMailSender getMailSender() {
         return mailSender;
+    }
+
+    public JobAlarmer getJobAlarmer() {
+        return jobAlarmer;
     }
 
     public DataSource getDataSource() {
