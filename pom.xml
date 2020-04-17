@@ -26,8 +26,8 @@
 
 		<xxl-rpc.version>1.4.1</xxl-rpc.version>
 
-		<spring.version>5.2.5.RELEASE</spring.version>
-		<spring-boot.version>2.2.5.RELEASE</spring-boot.version>
+		<spring.version>5.0.7.RELEASE</spring.version>
+		<spring-boot.version>2.0.3.RELEASE</spring-boot.version>
 
 		<mybatis-spring-boot-starter.version>2.1.2</mybatis-spring-boot-starter.version>
 		<mysql-connector-java.version>5.1.48</mysql-connector-java.version>
