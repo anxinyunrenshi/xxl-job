@@ -16,6 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.stereotype.Component;
@@ -43,9 +44,9 @@ public class JobAlarmer implements ApplicationContextAware, InitializingBean {
     /**
      * job alarm
      *
-     * @param info
-     * @param jobLog
-     * @return
+     * @param info      /
+     * @param jobLog    /
+     * @return          /
      */
     public int alarm(XxlJobInfo info, XxlJobLog jobLog) {
 
@@ -97,13 +98,29 @@ public class JobAlarmer implements ApplicationContextAware, InitializingBean {
                 }
             });
 
-    private static final long TRIGGER_TNTERVAL = 3 * 60 * 1000L;
+
+    /**
+     * 错误次数
+     */
+    @Value("${xxl.job.alarm.trigger.error-times:-1}")
+    private Integer errorTimes;
+
+    /**
+     * 时间间隔 单位:毫秒
+     * default: 3 * 60 * 1000L
+     */
+    @Value("${xxl.job.alarm.trigger.time-interval:180000}")
+    private Long timeInterval;
 
     public boolean isAlarm(Integer key){
         try {
             AlarmCount alarmCount = this.cache.get(key);
-            // 触发间隔时间大于三分钟
-            if(alarmCount.incrementAndGet() > 1 && (System.currentTimeMillis() - alarmCount.getCreateTime().getTime()) > TRIGGER_TNTERVAL){
+            // TODO 代码告警不清除 易读
+            // 触发次数检验  errorTimes =》 -1 , 即是关闭计数触发的方式
+            boolean t1 = errorTimes < 0 ? false : alarmCount.incrementAndGet() > errorTimes;
+            // 触发间隔时间检验 timeInterval =》 -1, 即是关闭间隔时间触发的方式
+            boolean t2 = timeInterval < 0 ? false : (System.currentTimeMillis() - alarmCount.getCreateTime().getTime()) > timeInterval;
+            if(t1 || t2){
                 // 删除缓存 进入一下次
                 logger.info("触发告警: {}", alarmCount);
                 this.cache.invalidate(key);
