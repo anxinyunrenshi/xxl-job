@@ -1,10 +1,17 @@
 package com.xxl.job.admin.core.alarm;
 
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import com.xxl.job.admin.core.model.XxlJobInfo;
 import com.xxl.job.admin.core.model.XxlJobLog;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
@@ -43,6 +50,12 @@ public class JobAlarmer implements ApplicationContextAware, InitializingBean {
     public int alarm(XxlJobInfo info, XxlJobLog jobLog) {
 
         int result = 1; // success means all-success
+
+        // 避免过多告警
+        if(info != null && !isAlarm(info.getId())){
+            return result;
+        }
+
         if (jobAlarmList!=null && jobAlarmList.size()>0) {
             for (JobAlarm alarm: jobAlarmList) {
                 int resultItem = 1;
@@ -70,6 +83,83 @@ public class JobAlarmer implements ApplicationContextAware, InitializingBean {
 
         return result;
 
+    }
+
+    /**
+     * 如果在时间窗口 N 内发生了 X 次异常信息，相应的我就需要作出反馈（报警、记录日志等）
+     */
+    private final LoadingCache<Integer, AlarmCount> cache = CacheBuilder.newBuilder()
+            .expireAfterWrite(36, TimeUnit.HOURS)
+            .build(new CacheLoader<Integer, AlarmCount>(){
+                @Override
+                public AlarmCount load(Integer key) throws Exception {
+                    return new AlarmCount(key);
+                }
+            });
+
+    private static final long TRIGGER_TNTERVAL = 3 * 60 * 1000L;
+
+    public boolean isAlarm(Integer key){
+        try {
+            AlarmCount alarmCount = this.cache.get(key);
+            // 触发间隔时间大于三分钟
+            if(alarmCount.incrementAndGet() > 1 && (System.currentTimeMillis() - alarmCount.getCreateTime().getTime()) > TRIGGER_TNTERVAL){
+                // 删除缓存 进入一下次
+                logger.info("触发告警: {}", alarmCount);
+                this.cache.invalidate(key);
+                return true;
+            }
+        } catch (ExecutionException e) {
+            // no doing anything
+        }
+        return false;
+    }
+
+    public static class AlarmCount {
+        private Integer jobId;
+        // 计数器
+        private AtomicLong count;
+        // 上一次触发时间
+        private Date lastTriggerTime;
+        // 计数开始时间
+        private Date createTime;
+
+        public AlarmCount(Integer jobId) {
+            this.jobId = jobId;
+            this.count = new AtomicLong(0);
+            this.createTime = new Date();
+        }
+
+        public long incrementAndGet(){
+            this.lastTriggerTime = new Date();
+            return this.count.incrementAndGet();
+        }
+
+        public Integer getJobId() {
+            return jobId;
+        }
+
+        public AtomicLong getCount() {
+            return count;
+        }
+
+        public Date getLastTriggerTime() {
+            return lastTriggerTime;
+        }
+
+        public Date getCreateTime() {
+            return createTime;
+        }
+
+        @Override
+        public String toString() {
+            return "AlarmCount{" +
+                    "jobId=" + jobId +
+                    ", count=" + count +
+                    ", lastTriggerTime=" + lastTriggerTime +
+                    ", createTime=" + createTime +
+                    '}';
+        }
     }
 
 }
