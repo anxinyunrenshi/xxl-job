@@ -115,11 +115,13 @@ public class JobAlarmer implements ApplicationContextAware, InitializingBean {
     public boolean isAlarm(Integer key){
         try {
             AlarmCount alarmCount = this.cache.get(key);
+            long newErrorTimes = alarmCount.incrementAndGet();
+            long newTimeInterval = System.currentTimeMillis() - alarmCount.getCreateTime().getTime();
             // TODO 代码告警不清除 易读
             // 触发次数检验  errorTimes =》 -1 , 即是关闭计数触发的方式
-            boolean t1 = errorTimes < 0 ? false : alarmCount.incrementAndGet() > errorTimes;
+            boolean t1 = errorTimes < 0 ? false : newErrorTimes > errorTimes;
             // 触发间隔时间检验 timeInterval =》 -1, 即是关闭间隔时间触发的方式
-            boolean t2 = timeInterval < 0 ? false : (System.currentTimeMillis() - alarmCount.getCreateTime().getTime()) > timeInterval;
+            boolean t2 = timeInterval < 0 ? false : newTimeInterval > timeInterval;
             if(t1 || t2){
                 // 删除缓存 进入一下次
                 logger.info("触发告警: {}", alarmCount);
