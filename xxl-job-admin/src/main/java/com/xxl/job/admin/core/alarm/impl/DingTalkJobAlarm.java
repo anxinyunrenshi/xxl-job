@@ -10,6 +10,7 @@ import com.xxl.job.admin.core.model.XxlJobInfo;
 import com.xxl.job.admin.core.model.XxlJobLog;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 /**
@@ -23,9 +24,17 @@ public class DingTalkJobAlarm implements JobAlarm {
 
     private static Logger logger = LoggerFactory.getLogger(DingTalkJobAlarm.class);
 
+
+    @Value("${ding.talk.alarm.enable:true}")
+    private boolean dingTalkAlarmEnable;
+
     @Override
     public int doAlarm(XxlJobInfo info, XxlJobLog jobLog) {
         int result = 1;
+        if(!dingTalkAlarmEnable){
+            logger.info("钉钉告警已关闭. JobHandler[{}]", jobLog.getExecutorHandler());
+            return result;
+        }
         if(info != null){
             try {
                 result = 2;
