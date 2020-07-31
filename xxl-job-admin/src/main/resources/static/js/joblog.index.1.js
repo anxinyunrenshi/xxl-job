@@ -13,11 +13,13 @@ $(function() {
 				if (data.code == 200) {
 					$("#jobId").html( '<option value="0" >'+ I18n.system_all +'</option>' );
 					$.each(data.content, function (n, value) {
-                        $("#jobId").append('<option value="' + value.id + '" >' + value.jobDesc + '</option>');
-                    });
-                    if ($("#jobId").attr("paramVal")){
-                        $("#jobId").find("option[value='" + $("#jobId").attr("paramVal") + "']").attr("selected",true);
-                    }
+							$("#jobId").append('<option value="' + value.id + '" >' + value.jobDesc + '</option>');
+					});
+					if ($("#jobId").attr("paramVal")){
+							$("#jobId").find("option[value='" + $("#jobId").attr("paramVal") + "']").attr("selected",true);
+					}
+					$("#jobId").selectpicker('refresh');
+					$("#jobId").selectpicker('render');
 				} else {
 					layer.open({
 						title: I18n.system_tips ,

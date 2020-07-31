@@ -28,7 +28,7 @@
 	    		<div class="col-xs-3">
 	              	<div class="input-group">
 	                	<span class="input-group-addon">${I18n.jobinfo_field_jobgroup}</span>
-                		<select class="form-control" id="jobGroup" >
+                		<select class="selectpicker form-control" id="jobGroup" data-live-search="true">
                 			<#list JobGroupList as group>
                 				<option value="${group.id}" <#if jobGroup==group.id>selected</#if> >${group.title}</option>
                 			</#list>
@@ -37,7 +37,7 @@
 	            </div>
                 <div class="col-xs-1">
                     <div class="input-group">
-                        <select class="form-control" id="triggerStatus" >
+                        <select class="selectpicker form-control" id="triggerStatus" >
                             <option value="-1" >${I18n.system_all}</option>
                             <option value="0" >${I18n.jobinfo_opt_stop}</option>
                             <option value="1" >${I18n.jobinfo_opt_start}</option>
